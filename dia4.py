@@ -51,21 +51,141 @@ from utils import getInputData
 
 data4 = getInputData("input4.txt")
 
+def pasaporteValidoParte1(diccionario):
+    if len(diccionario.keys()) == 8: # Tiene todas las claves
+        return 1
+    if len(diccionario.keys()) == 7 and "cid" not in diccionario.keys(): #Tiene todas las claves menos el cid
+        return 1
+    return 0
+
 diccionario = {}
 pasaportesValidos = 0
 for line in data4:
     elementos = line.split(" ")
 
     if "" in elementos: # Se ha procesado ya un pasaporte y compruebo los datos
-        print(diccionario)
-        if len(diccionario.keys()) == 8:
-            pasaportesValidos += 1
-        if len(diccionario.keys()) == 7 and "cid" in diccionario.keys():
-            pasaportesValidos += 1
-        diccionario.clear()
+        pasaportesValidos += pasaporteValidoParte1(diccionario)
+        diccionario.clear()        
     else:
         for elemento in elementos:
             clave, valor = elemento.split(":")
             diccionario[clave] = valor
 
+pasaportesValidos += pasaporteValidoParte1(diccionario) # Se procesa el último registro
 print(f"(Parte 1) La respuesta correcta es: {pasaportesValidos}")
+
+print("#########################################################################################")
+
+"""
+--- Part Two ---
+
+The line is moving more quickly now, but you overhear airport security talking about how passports with invalid data are getting through. Better add some data validation, quick!
+
+You can continue to ignore the cid field, but each other field has strict rules about what values are valid for automatic validation:
+
+    byr (Birth Year) - four digits; at least 1920 and at most 2002.
+    iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+    eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+    hgt (Height) - a number followed by either cm or in:
+        If cm, the number must be at least 150 and at most 193.
+        If in, the number must be at least 59 and at most 76.
+    hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+    ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+    pid (Passport ID) - a nine-digit number, including leading zeroes.
+    cid (Country ID) - ignored, missing or not.
+
+Your job is to count the passports where all required fields are both present and valid according to the above rules. Here are some example values:
+
+byr valid:   2002
+byr invalid: 2003
+
+hgt valid:   60in
+hgt valid:   190cm
+hgt invalid: 190in
+hgt invalid: 190
+
+hcl valid:   #123abc
+hcl invalid: #123abz
+hcl invalid: 123abc
+
+ecl valid:   brn
+ecl invalid: wat
+
+pid valid:   000000001
+pid invalid: 0123456789
+
+Here are some invalid passports:
+
+eyr:1972 cid:100
+hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926
+
+iyr:2019
+hcl:#602927 eyr:1967 hgt:170cm
+ecl:grn pid:012533040 byr:1946
+
+hcl:dab227 iyr:2012
+ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277
+
+hgt:59cm ecl:zzz
+eyr:2038 hcl:74454a iyr:2023
+pid:3556412378 byr:2007
+
+Here are some valid passports:
+
+pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980
+hcl:#623a2f
+
+eyr:2029 ecl:blu cid:129 byr:1989
+iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm
+
+hcl:#888785
+hgt:164cm byr:2001 iyr:2015 cid:88
+pid:545766238 ecl:hzl
+eyr:2022
+
+iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
+
+Count the number of valid passports - those that have all required fields and valid values. Continue to treat cid as optional. In your batch file, how many passports are valid?
+"""
+import re
+
+def condiciones(diccionario):
+    if len(diccionario["byr"]) == 4 and (int(diccionario["byr"]) >= 1920 and int(diccionario["byr"]) <= 2002):
+        if len(diccionario["iyr"]) == 4 and (int(diccionario["iyr"]) >= 2010 and int(diccionario["iyr"]) <= 2020):
+            if len(diccionario["eyr"]) == 4 and (int(diccionario["eyr"]) >= 2020 and int(diccionario["eyr"]) <= 2030): 
+                if re.search("\d+in|\d+cm", diccionario["hgt"]):
+                    if re.search("#\w{6}", diccionario["hcl"]):
+                        if diccionario["ecl"] in ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]:
+                            if len(diccionario["pid"]) == 9:
+                                if "cm" in diccionario["hgt"]:
+                                    if int(diccionario["hgt"].replace("cm", "")) >=150 and int(diccionario["hgt"].replace("cm", "")) <= 193:
+                                        return 1
+                                elif "in" in diccionario["hgt"]:
+                                    if int(diccionario["hgt"].replace("in", "")) >=59 and int(diccionario["hgt"].replace("in", "")) <= 76:
+                                        return 1
+                                else:
+                                    pass
+    return 0
+
+def pasaporteValidoParte2(diccionario):
+    if len(diccionario.keys()) == 8: # Tiene todas las claves
+        return condiciones(diccionario)           
+    if len(diccionario.keys()) == 7 and "cid" not in diccionario.keys(): #Tiene todas las claves menos el cid
+        return condiciones(diccionario)
+    return 0
+
+diccionario = {}
+pasaportesValidos = 0
+for line in data4:
+    elementos = line.split(" ")
+
+    if "" in elementos: # Se ha procesado ya un pasaporte y compruebo los datos
+        pasaportesValidos += pasaporteValidoParte2(diccionario)
+        diccionario.clear()        
+    else:
+        for elemento in elementos:
+            clave, valor = elemento.split(":")
+            diccionario[clave] = valor
+
+pasaportesValidos += pasaporteValidoParte2(diccionario) # Se procesa el último registro
+print(f"(Parte 2) La respuesta correcta es: {pasaportesValidos}")
